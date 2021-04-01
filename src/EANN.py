@@ -48,16 +48,28 @@ class Rumor_Data(Dataset):
 class ReverseLayerF(Function):
 
     #@staticmethod
+    '''
     def forward(self, x):
         self.lambd = args.lambd
         return x.view_as(x)
+    '''
+    @staticmethod
+    def forward(ctx, input):
+        ctx.lambd = args.lambd
+        return input.view_as(input)    
 
     #@staticmethod
+    '''
     def backward(self, grad_output):
         return (grad_output * -self.lambd)
+    '''
+    @staticmethod
+    def backward(ctx, grad_output):
+        return (grad_output * -ctx.lambd)
 
 def grad_reverse(x):
-    return ReverseLayerF()(x)
+    # return ReverseLayerF()(x)
+    return ReverseLayerF.apply(x)
 
 
 
@@ -147,27 +159,28 @@ class CNN_Fusion(nn.Module):
 
         return x
 
-    def forward(self, text, image,  mask):
+    # def forward(self, text, image,  mask):
+    def forward(ctx, text, image, mask):
         ### IMAGE #####
-        image = self.vgg(image) #[N, 512]
-        image = F.leaky_relu(self.image_fc1(image))
+        image = ctx.vgg(image) #[N, 512]
+        image = F.leaky_relu(ctx.image_fc1(image))
         
         ##########CNN##################
-        text = self.embed(text)
+        text = ctx.embed(text)
         text = text * mask.unsqueeze(2).expand_as(text)
         text = text.unsqueeze(1)
-        text = [F.leaky_relu(conv(text)).squeeze(3) for conv in self.convs]  # [(N,hidden_dim,W), ...]*len(window_size)
+        text = [F.leaky_relu(conv(text)).squeeze(3) for conv in ctx.convs]  # [(N,hidden_dim,W), ...]*len(window_size)
         #text = [F.avg_pool1d(i, i.size(2)).squeeze(2) for i in text]  # [(N,hidden_dim), ...]*len(window_size)
         text = [F.max_pool1d(i, i.size(2)).squeeze(2) for i in text]
         text = torch.cat(text, 1)
-        text = F.leaky_relu(self.fc1(text))
+        text = F.leaky_relu(ctx.fc1(text))
         text_image = torch.cat((text, image), 1)
 
         ### Fake or real
-        class_output = self.class_classifier(text_image)
+        class_output = ctx.class_classifier(text_image)
         ## Domain (which Event )
         reverse_feature = grad_reverse(text_image)
-        domain_output = self.domain_classifier(reverse_feature)
+        domain_output = ctx.domain_classifier(reverse_feature)
 
         # ### Multimodal
         # text_reverse_feature = grad_reverse(text)
@@ -175,6 +188,10 @@ class CNN_Fusion(nn.Module):
         # text_output = self.modal_classifier(text_reverse_feature)
         # image_output = self.modal_classifier(image_reverse_feature
         return class_output, domain_output
+
+    def backward(ctx, grad_output):
+        result, = ctx.saved_tensors
+        return grad_output * result
 
 def to_var(x):
     if torch.cuda.is_available():
@@ -514,7 +531,7 @@ def word2vec(post, word_id_map, W):
 def load_data(args):
     train, validate, test = process_data.get_data(args.text_only)
     #print(train[4][0])
-    word_vector_path = '../Data/weibo/word_embedding.pickle'
+    word_vector_path = 'EANN-py3/data/weibo/word_embedding.pickle'
     f = open(word_vector_path, 'rb')
     weight = pickle.load(f)  # W, W2, word_idx_map, vocab
     W, W2, word_idx_map, vocab, max_len = weight[0], weight[1], weight[2], weight[3], weight[4]
