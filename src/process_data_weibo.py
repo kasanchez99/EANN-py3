@@ -27,13 +27,14 @@ from builtins import str
 
 
 #returns the list of all the stopwords, predefined in stop_words.txt
-def stopwordslist(filepath = '../data/weibo/stop_words.txt'):
+def stopwordslist(filepath = 'EANN-py3/data/weibo/stop_words.txt'):
     stopwords = {}
     for line in open(filepath, 'r').readlines():
         #converts the line into 'utf-8' format and removes trailing and leading whitespaces
         #https://docs.python.org/2/howto/unicode.html
         #utf-8 encoding is used because many of the words are in chinese so they cannot be represented with ascii encoding.
-        line = unicode(line, "utf-8").strip()
+        #line = unicode(line, "utf-8").strip()
+        line = str(line).strip()
         stopwords[line] = 1
     #stopwords = [line.strip() for line in open(filepath, 'r', encoding='utf-8').readlines()]
     return stopwords
@@ -54,7 +55,7 @@ def clean_str_sst(string):
 #Converts the images to RGB and tranforms it into format specified in the object 'data_transforms'
 def read_image():
     image_list = {}
-    file_list = ['../data/weibo/nonrumor_images/', '../data/weibo/rumor_images/']
+    file_list = ['EANN-py3/data/weibo/nonrumor_images/', 'EANN-py3/data/weibo/rumor_images/']
     for path in file_list:
         #transforms.Compose() is used to stack transforms
         data_transforms = transforms.Compose([
@@ -89,7 +90,7 @@ def read_image():
 
 #helper funtion to write all lines from 'data' into top_n_data.txt
 def write_txt(data):
-    f = open("../data/weibo/top_n_data.txt", 'wb')
+    f = open("EANN-py3/data/weibo/top_n_data.txt", 'wb')
     for line in data:
         for l in line:
             f.write(l+"\n")
@@ -118,15 +119,15 @@ def write_data(flag, image, text_only):
     #returns post content of each relevant post, and dataframe with all the data entries (described in variable 'data')
     def read_post(flag):
         stop_words = stopwordslist()
-        pre_path = "../data/weibo/tweets/"
+        pre_path = "EANN-py3/data/weibo/tweets/"
         file_list = [pre_path + "test_nonrumor.txt", pre_path + "test_rumor.txt", \
                          pre_path + "train_nonrumor.txt", pre_path + "train_rumor.txt"]
         if flag == "train":
-            id = pickle.load(open("../data/weibo/train_id.pickle", 'rb'))
+            id = pickle.load(open("EANN-py3/data/weibo/train_id.pickle", 'rb'))
         elif flag == "validate":
-            id = pickle.load(open("../data/weibo/validate_id.pickle", 'rb'))
+            id = pickle.load(open("EANN-py3/data/weibo/validate_id.pickle", 'rb'))
         elif flag == "test":
-            id = pickle.load(open("../data/weibo/test_id.pickle", 'rb'))
+            id = pickle.load(open("EANN-py3/data/weibo/test_id.pickle", 'rb'))
 
         #contains a list of all the original tweet contents (uncleaned)
         post_content = []
@@ -148,7 +149,7 @@ def write_data(flag, image, text_only):
         #read each file
         for k, f in enumerate(file_list):
 
-            f = open(f, 'rb')
+            f = open(f, 'r')
             #it reads test_nonrumor, then test_rumor, then train_nonrumor, then train_rumor
             #k starts at 1.
             #so when k is odd, label is real, otherwise label is false.
@@ -187,7 +188,8 @@ def write_data(flag, image, text_only):
 
                 #third line - text content is extracted (this is in chinese)
                 if (i + 1) % 3 == 0:
-                    l = clean_str_sst(unicode(l, "utf-8"))
+                    #l = clean_str_sst(unicode(l, "utf-8"))
+                    l = clean_str_sst(str(l))
 
                     #jieba is a library used for chinese text processing.
                     #cut_for_search function splits the chinese text into words.
@@ -481,9 +483,10 @@ def get_data(text_only):
 
     #
     #
-    word_embedding_path = "../Data/weibo/w2v.pickle"
+    word_embedding_path = "EANN-py3/data/weibo/w2v.pickle"
 
     w2v = pickle.load(open(word_embedding_path, 'rb'))
+    # w2v = pickle.load(open(word_embedding_path, 'rb', encoding='utf-8', errors='ignore'))
     # print(temp)
     # #
     print("word2vec loaded!")
@@ -524,7 +527,7 @@ def get_data(text_only):
     # # rand_vecs = {}
     # # add_unknown_words(rand_vecs, vocab)
     W2 = rand_vecs = {}
-    w_file = open("../data/weibo/word_embedding.pickle", "wb")
+    w_file = open("EANN-py3/data/weibo/word_embedding.pickle", "wb")
     pickle.dump([W, W2, word_idx_map, vocab, max_l], w_file)
     w_file.close()
     return train_data, valiate_data, test_data
