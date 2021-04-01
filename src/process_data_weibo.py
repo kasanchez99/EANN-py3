@@ -27,7 +27,7 @@ from builtins import str
 
 
 #returns the list of all the stopwords, predefined in stop_words.txt
-def stopwordslist(filepath = '../Data/weibo/stop_words.txt'):
+def stopwordslist(filepath = '../data/weibo/stop_words.txt'):
     stopwords = {}
     for line in open(filepath, 'r').readlines():
         #converts the line into 'utf-8' format and removes trailing and leading whitespaces
@@ -118,7 +118,7 @@ def write_data(flag, image, text_only):
     #returns post content of each relevant post, and dataframe with all the data entries (described in variable 'data')
     def read_post(flag):
         stop_words = stopwordslist()
-        pre_path = "../Data/weibo/tweets/"
+        pre_path = "../data/weibo/tweets/"
         file_list = [pre_path + "test_nonrumor.txt", pre_path + "test_rumor.txt", \
                          pre_path + "train_nonrumor.txt", pre_path + "train_rumor.txt"]
         if flag == "train":
@@ -524,7 +524,7 @@ def get_data(text_only):
     # # rand_vecs = {}
     # # add_unknown_words(rand_vecs, vocab)
     W2 = rand_vecs = {}
-    w_file = open("../Data/weibo/word_embedding.pickle", "wb")
+    w_file = open("../data/weibo/word_embedding.pickle", "wb")
     pickle.dump([W, W2, word_idx_map, vocab, max_l], w_file)
     w_file.close()
     return train_data, valiate_data, test_data
