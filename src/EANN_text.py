@@ -49,16 +49,28 @@ class ReverseLayerF(Function):
         #self.lambd = lambd
 
     #@staticmethod
+    '''
     def forward(self, x):
         self.lambd = args.lambd
         return x.view_as(x)
+    '''
+    @staticmethod
+    def forward(ctx, input):
+        ctx.lambd = args.lambd
+        return input.view_as(input)  
 
     #@staticmethod
+    '''
     def backward(self, grad_output):
         return (grad_output * -self.lambd)
+    ''' 
+    @staticmethod
+    def backward(ctx, grad_output):
+        return (grad_output * -ctx.lambd)
 
 def grad_reverse(x):
-    return ReverseLayerF()(x)
+    # return ReverseLayerF()(x)
+    return ReverseLayerF.apply(x)
 
 
 
@@ -157,7 +169,7 @@ class CNN_Fusion(nn.Module):
         x = F.max_pool1d(x, x.size(2)).squeeze(2)
 
         return x
-
+    '''
     def forward(self, text, mask):
         
         #########CNN##################
@@ -179,6 +191,31 @@ class CNN_Fusion(nn.Module):
         domain_output = self.domain_classifier(reverse_feature)
      
         return class_output, domain_output
+    '''
+    def forward(ctx, text, mask):
+        #########CNN##################
+        text = ctx.embed(text)
+        text = text * mask.unsqueeze(2).expand_as(text)
+        text = text.unsqueeze(1)
+        text = [F.relu(conv(text)).squeeze(3) for conv in ctx.convs]  # [(N,hidden_dim,W), ...]*len(window_size)
+        #text = [F.avg_pool1d(i, i.size(2)).squeeze(2) for i in text]  # [(N,hidden_dim), ...]*len(window_size)
+        text = [F.max_pool1d(i, i.size(2)).squeeze(2) for i in text]
+        text = torch.cat(text, 1)
+        text = F.relu(ctx.fc1(text))
+        #text = self.dropout(text)
+
+        ### Class
+        #class_output = self.class_classifier(text_image)
+        class_output = ctx.class_classifier(text)
+        ## Domain
+        reverse_feature = grad_reverse(text)
+        domain_output = ctx.domain_classifier(reverse_feature)
+     
+        return class_output, domain_output
+
+    def backward(ctx, grad_output):
+        result, = ctx.saved_tensors
+        return grad_output * result
 
 def to_var(x):
     if torch.cuda.is_available():
@@ -349,10 +386,10 @@ def main(args):
                 _, labels = torch.max(train_labels, 1)
                 accuracy = (labels.squeeze() == argmax.squeeze()).float().mean()
 
-            class_cost_vector.append(class_loss.data[0])
+            class_cost_vector.append(class_loss.data)
             #domain_cost_vector.append(domain_loss.data[0])
-            cost_vector.append(loss.data[0])
-            acc_vector.append(accuracy.data[0])
+            cost_vector.append(loss.data)
+            acc_vector.append(accuracy.data)
             # if i == 0:
             #     train_score = to_np(class_outputs.squeeze())
             #     train_pred = to_np(argmax.squeeze())
@@ -375,9 +412,9 @@ def main(args):
             #domain_loss = criterion(domain_outputs, event_labels)
                 #_, labels = torch.max(validate_labels, 1)
             validate_accuracy = (validate_labels == validate_argmax.squeeze()).float().mean()
-            vali_cost_vector.append( vali_loss.data[0])
+            vali_cost_vector.append( vali_loss.data)
                 #validate_accuracy = (validate_labels == validate_argmax.squeeze()).float().mean()
-            validate_acc_vector_temp.append(validate_accuracy.data[0])
+            validate_acc_vector_temp.append(validate_accuracy.data)
         validate_acc = np.mean(validate_acc_vector_temp)
         valid_acc_vector.append(validate_acc)
         model.train()
@@ -502,7 +539,7 @@ def word2vec(post, word_id_map, W):
 def load_data(args):
     train, validate, test = process_data.get_data(args.text_only)
     #print(train[4][0])
-    word_vector_path = '../Data/weibo/word_embedding.pickle'
+    word_vector_path = 'EANN-py3/data/weibo/word_embedding.pickle'
     f = open(word_vector_path, 'rb')
     weight = pickle.load(f)  # W, W2, word_idx_map, vocab
     W, W2, word_idx_map, vocab, max_len = weight[0], weight[1], weight[2], weight[3], weight[4]
@@ -537,9 +574,9 @@ def transform(event):
 if __name__ == '__main__':
     parse = argparse.ArgumentParser()
     parser = parse_arguments(parse)
-    train = '../Data/weibo/train.pickle'
-    test = '../Data/weibo/test.pickle'
-    output = '../Data/weibo/output/'
+    train = 'EANN-py3/data/weibo/train.pickle'
+    test = 'EANN-py3/data/weibo/test.pickle'
+    output = 'EANN-py3/data/weibo/output/'
     args = parser.parse_args([train, test, output])
     #    print(args)
     main(args)
