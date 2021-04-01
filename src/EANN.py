@@ -350,10 +350,11 @@ def main(args):
                 _, labels = torch.max(train_labels, 1)
                 accuracy = (labels.squeeze() == argmax.squeeze()).float().mean()
 
-            class_cost_vector.append(class_loss.data[0])
-            domain_cost_vector.append(domain_loss.data[0])
-            cost_vector.append(loss.data[0])
-            acc_vector.append(accuracy.data[0])
+            # class_cost_vector.append(class_loss.data[0])
+            class_cost_vector.append(class_loss.data)
+            domain_cost_vector.append(domain_loss.data)
+            cost_vector.append(loss.data)
+            acc_vector.append(accuracy.data)
             # if i == 0:
             #     train_score = to_np(class_outputs.squeeze())
             #     train_pred = to_np(argmax.squeeze())
@@ -377,9 +378,9 @@ def main(args):
             #domain_loss = criterion(domain_outputs, event_labels)
                 #_, labels = torch.max(validate_labels, 1)
             validate_accuracy = (validate_labels == validate_argmax.squeeze()).float().mean()
-            vali_cost_vector.append( vali_loss.data[0])
+            vali_cost_vector.append( vali_loss.data)
                 #validate_accuracy = (validate_labels == validate_argmax.squeeze()).float().mean()
-            validate_acc_vector_temp.append(validate_accuracy.data[0])
+            validate_acc_vector_temp.append(validate_accuracy.data)
         validate_acc = np.mean(validate_acc_vector_temp)
         valid_acc_vector.append(validate_acc)
         model.train()
@@ -498,7 +499,7 @@ def get_top_post(output, label, test_id, top_n = 500):
     for i in top_n_id:
         top_n_id_dict[i] = True
 
-    pickle.dump(top_n_id_dict, open("../Data/weibo/top_n_id.pickle", "wb"))
+    pickle.dump(top_n_id_dict, open("EANN-py3/data/weibo/top_n_id.pickle", "wb"))
 
     return top_n_id
 
@@ -569,7 +570,7 @@ if __name__ == '__main__':
     parser = parse_arguments(parse)
     train = '' 
     test = ''
-    output = '../Data/weibo/RESULT/'
+    output = 'EANN-py3/data/weibo/RESULT/'
     args = parser.parse_args([train, test, output])
     
     main(args)
