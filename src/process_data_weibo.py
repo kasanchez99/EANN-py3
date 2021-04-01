@@ -54,7 +54,7 @@ def clean_str_sst(string):
 #Converts the images to RGB and tranforms it into format specified in the object 'data_transforms'
 def read_image():
     image_list = {}
-    file_list = ['../Data/weibo/nonrumor_images/', '../Data/weibo/rumor_images/']
+    file_list = ['../data/weibo/nonrumor_images/', '../data/weibo/rumor_images/']
     for path in file_list:
         #transforms.Compose() is used to stack transforms
         data_transforms = transforms.Compose([
@@ -89,7 +89,7 @@ def read_image():
 
 #helper funtion to write all lines from 'data' into top_n_data.txt
 def write_txt(data):
-    f = open("../Data/weibo/top_n_data.txt", 'wb')
+    f = open("../data/weibo/top_n_data.txt", 'wb')
     for line in data:
         for l in line:
             f.write(l+"\n")
@@ -122,11 +122,11 @@ def write_data(flag, image, text_only):
         file_list = [pre_path + "test_nonrumor.txt", pre_path + "test_rumor.txt", \
                          pre_path + "train_nonrumor.txt", pre_path + "train_rumor.txt"]
         if flag == "train":
-            id = pickle.load(open("../Data/weibo/train_id.pickle", 'rb'))
+            id = pickle.load(open("../data/weibo/train_id.pickle", 'rb'))
         elif flag == "validate":
-            id = pickle.load(open("../Data/weibo/validate_id.pickle", 'rb'))
+            id = pickle.load(open("../data/weibo/validate_id.pickle", 'rb'))
         elif flag == "test":
-            id = pickle.load(open("../Data/weibo/test_id.pickle", 'rb'))
+            id = pickle.load(open("../data/weibo/test_id.pickle", 'rb'))
 
         #contains a list of all the original tweet contents (uncleaned)
         post_content = []
