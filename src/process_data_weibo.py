@@ -485,7 +485,9 @@ def get_data(text_only):
     #
     word_embedding_path = "EANN-py3/data/weibo/w2v.pickle"
 
-    w2v = pickle.load(open(word_embedding_path, 'rb'))
+    # w2v = pickle.load(open(word_embedding_path, 'rb'))
+    with open(word_embedding_path, 'rb') as wep:
+        w2v = pickle.load(wep, encoding="bytes")
     # w2v = pickle.load(open(word_embedding_path, 'rb', encoding='utf-8', errors='ignore'))
     # print(temp)
     # #
